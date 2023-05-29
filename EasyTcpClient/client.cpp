@@ -6,6 +6,11 @@
 #include<stdio.h>
 #pragma comment(lib,"ws2_32.lib") //仅支持windows系统，引入静态链接库
 
+struct DataPackage
+{
+	int age;
+	char name[32];
+};
 int main()
 {
 	//启动Windows Socket 2.x 环境
@@ -56,11 +61,12 @@ int main()
 		}
 
 		//6 接收服务器信息 recv
-		char recvBuf[256] = {};
+		char recvBuf[128] = {};
 		int nlen = recv(_sock, recvBuf, 256, 0);
 		if (nlen > 0)
 		{
-			printf("接收到数据：%s \n", recvBuf);
+			DataPackage* dp = (DataPackage*)recvBuf;
+			printf("接收到数据：年龄 = %d, 姓名 = %s \n", dp->age,dp->name);
 		}
 	}
 
