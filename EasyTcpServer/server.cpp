@@ -9,11 +9,40 @@
 #pragma comment(lib,"ws2_32.lib") //仅支持windows系统，引入静态链接库
 
 //必须考虑字节对齐
-struct DataPackage
+
+enum CMD
 {
-	int age;
-	char name[32]; 
+	CMD_LOGIN,
+	CMD_LOGOUT,
+	CMD_ERROR
 };
+//包头
+struct DataHeader
+{
+	short dataLength;//数据长度
+	short cmd; //数据命令
+};
+struct Login
+{
+	char userName[32];
+	char PassWord[32];
+};
+
+struct LoginResult
+{
+	int result;
+};
+
+struct Logout
+{
+	char userName[32];
+};
+
+struct LogoutResult
+{
+	int result;
+};
+
 int main()
 {
 	WORD ver = MAKEWORD(2, 2);
@@ -59,33 +88,48 @@ int main()
 	}
 	printf("新客户端加入：socket = %d, IP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
 
-	char _recvBuf[128] = {};
+
 	while (true)
 	{
+		DataHeader header = {};
 		//5 接受客户端数据
-		int nLen = recv(_cSock,_recvBuf,128,0);
+		int nLen = recv(_cSock,(char *)&header, sizeof(DataHeader), 0);
 		if (nLen <= 0)
 		{
 			printf("客户端已退出，任务结束.");
 			break;
 		}
-		printf("收到命令：%s \n", _recvBuf);
+		//printf("收到命令：%s \n", _recvBuf);
+		printf("收到命令： %d 数据长度： %d\n", header.cmd, header.dataLength);
 		//6 处理请求
-		if (0 == strcmp(_recvBuf, "getInfo"))
+		switch (header.cmd)
 		{
-			//7 send 向客户端发送信息
-			DataPackage dp = { 24,"JHY" };
-			send(_cSock, (const char *) & dp, sizeof(DataPackage), 0);//+1表示传输结束符
+			case CMD_LOGIN:
+			{
+				Login login = {};
+				recv(_cSock, (char*)&login, sizeof(Login), 0);
+				//忽略判断用户名和密码是否正确
+				LoginResult ret = {0};
+				send(_cSock, (char*)&header, sizeof(DataHeader), 0);
+				send(_cSock, (char*)&ret, sizeof(LoginResult), 0);
+			}
+			break;
+			case CMD_LOGOUT:
+			{
+				Logout loginout = {};
+				recv(_cSock, (char*)&loginout, sizeof(Logout), 0);
+				//忽略判断用户名和密码是否正确
+				LogoutResult ret = { 1 };
+				send(_cSock, (char*)&header, sizeof(DataHeader), 0);
+				send(_cSock, (char*)&ret, sizeof(LogoutResult), 0);
+			}
+			break;
+			default:
+				header.cmd = CMD_ERROR;
+				header.dataLength = 0;
+				send(_cSock, (char*)&header, sizeof(DataHeader), 0);
+			break;
 		}
-		else
-		{
-			//7 send 向客户端发送信息
-			char msgBuf[] = "???.";
-			send(_cSock, msgBuf, strlen(msgBuf) + 1, 0);//+1表示传输结束符
-		}
-		
-
-
 	}
 
 
