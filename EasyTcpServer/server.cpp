@@ -7,6 +7,13 @@
 #include<stdio.h>
 
 #pragma comment(lib,"ws2_32.lib") //仅支持windows系统，引入静态链接库
+
+//必须考虑字节对齐
+struct DataPackage
+{
+	int age;
+	char name[32]; 
+};
 int main()
 {
 	WORD ver = MAKEWORD(2, 2);
@@ -64,17 +71,11 @@ int main()
 		}
 		printf("收到命令：%s \n", _recvBuf);
 		//6 处理请求
-		if (0 == strcmp(_recvBuf, "getName"))
+		if (0 == strcmp(_recvBuf, "getInfo"))
 		{
 			//7 send 向客户端发送信息
-			char msgBuf[] = "JHY.";
-			send(_cSock, msgBuf, strlen(msgBuf) + 1, 0);//+1表示传输结束符
-		}
-		else if(0 == strcmp(_recvBuf, "getAge"))
-		{
-			//7 send 向客户端发送信息
-			char msgBuf[] = "24.";
-			send(_cSock, msgBuf, strlen(msgBuf) + 1, 0);//+1表示传输结束符
+			DataPackage dp = { 24,"JHY" };
+			send(_cSock, (const char *) & dp, sizeof(DataPackage), 0);//+1表示传输结束符
 		}
 		else
 		{
