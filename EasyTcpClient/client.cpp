@@ -6,11 +6,39 @@
 #include<stdio.h>
 #pragma comment(lib,"ws2_32.lib") //仅支持windows系统，引入静态链接库
 
-struct DataPackage
+
+enum CMD
 {
-	int age;
-	char name[32];
+	CMD_LOGIN,
+	CMD_LOGOUT,
+	CMD_ERROR
 };
+//包头
+struct DataHeader
+{
+	short dataLength;//数据长度
+	short cmd; //数据命令
+};
+struct Login
+{
+	char userName[32];
+	char PassWord[32];
+};
+
+struct LoginResult
+{
+	int result;
+};
+
+struct Logout
+{
+	char userName[32];
+};
+struct LogoutResult
+{
+	int result;
+};
+
 int main()
 {
 	//启动Windows Socket 2.x 环境
@@ -47,30 +75,47 @@ int main()
 	{
 		//3 输入请求命令
 		char cmdBuf[128] = {};
-		scanf("%s",cmdBuf);
+		scanf("%s", cmdBuf);
 		//4 处理请求命令
 		if (0 == strcmp(cmdBuf, "exit"))
 		{
-			printf("收到退出命令，任务结束.");
+			printf("收到退出命令，任务结束.\n");
 			break;
+		}
+		else if (0 == strcmp(cmdBuf, "login"))
+		{
+			Login login = { "JHY","666" };
+			DataHeader hd = { sizeof(Login), CMD_LOGIN };
+			//5 向服务器发送请求命令
+			send(_sock, (const char*)&hd, sizeof(DataHeader), 0);
+			send(_sock, (const char*)&login, sizeof(Login), 0);
+			//6 接受服务器返回的数据
+			DataHeader retHeader = {};
+			LoginResult loginRet = {};
+			recv(_sock, (char*)&retHeader, sizeof(DataHeader), 0);
+			recv(_sock, (char*)&loginRet, sizeof(LoginResult), 0);
+			printf("LoginResult: %d\n", loginRet.result);
+		}
+		else if (0 == strcmp(cmdBuf, "logout"))
+		{
+			//5 向服务器发送请求命令
+			Logout logout = { "JHY" };
+			DataHeader hd = {sizeof(Logout), CMD_LOGOUT };
+			send(_sock, (const char*)&hd, sizeof(DataHeader), 0);
+			send(_sock, (const char*)&logout, sizeof(Logout), 0);
+			//6 接受服务器返回的数据
+			DataHeader retHeader = {};
+			LogoutResult logoutRet = {};
+			recv(_sock, (char*)&retHeader, sizeof(DataHeader), 0);
+			recv(_sock, (char*)&logoutRet, sizeof(LogoutResult), 0);
+			printf("LogoutResult: %d \n", logoutRet.result);
 		}
 		else
 		{
-			//5 向服务器发送请求命令
-			send(_sock, cmdBuf, strlen(cmdBuf) + 1, 0);
+			printf("不支持的命令，请重新输入.\n");
 		}
 
-		//6 接收服务器信息 recv
-		char recvBuf[128] = {};
-		int nlen = recv(_sock, recvBuf, 256, 0);
-		if (nlen > 0)
-		{
-			DataPackage* dp = (DataPackage*)recvBuf;
-			printf("接收到数据：年龄 = %d, 姓名 = %s \n", dp->age,dp->name);
-		}
 	}
-
-
 	//7、关闭套接字closesocket
 	closesocket(_sock);
 	//清楚Windows Socket环境
