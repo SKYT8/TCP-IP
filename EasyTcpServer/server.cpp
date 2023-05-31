@@ -11,6 +11,7 @@
 using namespace std;
 //必须考虑字节对齐
 
+//枚举指令
 enum CMD
 {
 	CMD_LOGIN,
@@ -20,12 +21,14 @@ enum CMD
 	CMD_NEW_USER_JOIN,
 	CMD_ERROR
 };
+
 //包头
 struct DataHeader
 {
 	short dataLength;//数据长度
 	short cmd; //数据命令
 };
+
 struct Login:public DataHeader
 {
 	Login()
@@ -81,11 +84,9 @@ struct NewUserJoin:public DataHeader
 };
 
 //创建一个全局的SOCKET类型数组，用来存储多个客户端
-
 vector<SOCKET> g_clients;
 
-
-//接受处理函数
+//接收，处理函数：接受客户端请求消息，并处理请求
 int processor(SOCKET _cSock)
 {
 	//缓冲区，管理消息长度
@@ -101,33 +102,33 @@ int processor(SOCKET _cSock)
 	//6 处理请求
 	switch (header->cmd)
 	{
-	case CMD_LOGIN:
-	{
-		recv(_cSock, szRecv + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);
-		Login* login = (Login*)szRecv;
-		printf("收到客户端<Socket = %d>请求:CMD_LOGIN, 数据长度:%d, userName:%s, PassWord:%s\n", _cSock, login->dataLength, login->userName, login->PassWord);
-		//忽略判断用户名和密码是否正确
-		LoginResult ret;
-		send(_cSock, (char*)&ret, sizeof(LoginResult), 0);
-	}
-	break;
-	case CMD_LOGOUT:
-	{  
-		recv(_cSock, szRecv + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);
-		Logout* logout = (Logout*)szRecv;
-		printf("收到客户端<Socket = %d>请求:CMD_LOGOUT, 数据长度:%d, userName:%s\n", _cSock, logout->dataLength, logout->userName);
-		//忽略判断用户名和密码是否正确
-		LogoutResult ret;
-		send(_cSock, (char*)&ret, sizeof(LogoutResult), 0);
+		case CMD_LOGIN:
+		{
+			recv(_cSock, szRecv + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);//包头已经接收，仅 接收剩下的消息体
+			Login* login = (Login*)szRecv;
+			printf("收到客户端<Socket = %d>请求:CMD_LOGIN, 数据长度:%d, userName:%s, PassWord:%s\n", _cSock, login->dataLength, login->userName, login->PassWord);
+			//忽略判断用户名和密码是否正确
+			LoginResult ret;
+			send(_cSock, (char*)&ret, sizeof(LoginResult), 0);
+		}
+		break;
+		case CMD_LOGOUT:
+		{  
+			recv(_cSock, szRecv + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);
+			Logout* logout = (Logout*)szRecv;
+			printf("收到客户端<Socket = %d>请求:CMD_LOGOUT, 数据长度:%d, userName:%s\n", _cSock, logout->dataLength, logout->userName);
+			//忽略判断用户名和密码是否正确
+			LogoutResult ret;
+			send(_cSock, (char*)&ret, sizeof(LogoutResult), 0);
 
-	}
-	break;
-	default:
-	{
-		DataHeader header = { 0,CMD_ERROR };
-		send(_cSock, (char*)&header, sizeof(DataHeader), 0);
-	}
-	break;
+		}
+		break;
+		default:
+		{
+			DataHeader header = { 0,CMD_ERROR };
+			send(_cSock, (char*)&header, sizeof(DataHeader), 0);
+		}
+		break;
 	}
 
 }
@@ -165,30 +166,33 @@ int main()
 		printf("TRUE,监听端口成功\n");
 	}
 
-
-
 	while (true)
 	{
-		//伯克利 socket
-		fd_set fdRead;
+		//伯克利 套接字socket
+		fd_set fdRead; // 申明一个描述符集合，用描述符来管理多个套接字
 		fd_set fdWrite;
 		fd_set fdExp;
 
+		//清理集合
 		FD_ZERO(&fdRead);
 		FD_ZERO(&fdWrite);
 		FD_ZERO(&fdExp);
-
+		//将描述符加入集合
 		FD_SET(_sock, &fdRead);
 		FD_SET(_sock, &fdWrite);		
 		FD_SET(_sock, &fdExp);
 
 		for (int n = (int)g_clients.size() - 1; n >= 0; n--)
 		{
+			//将客户端套接字添加到描述符集合
 			FD_SET(g_clients[n], &fdRead);
 		}
 
-		// nfds是一个整数值，是指fd_set集合中所有的描述符（socket）的范围值，不是数量值；即最大值+1 在Windows中可以写 0；
-		timeval t = {1,0};
+		// int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+		// nfds是一个整数值，是指fd_set集合中所有的描述符（socket）的范围值，不是数量值；即最大值+1 在Windows中可以写 0； 
+		timeval t = {1,0};//结构体中含两个数据，对应秒和毫秒；将值设为NULL表示阻塞，直等到有套接字准备就绪；将值设为0表示立即返回；也可以将值设为其他值
+
+		//设置为select模型
 		int ret = select(_sock + 1, &fdRead, &fdWrite, &fdExp, &t); 
 		if (ret < 0)
 		{
@@ -204,7 +208,6 @@ int main()
 			int nAddrLen = sizeof(sockaddr_in);
 			SOCKET _cSock = INVALID_SOCKET;
 
-
 			_cSock = accept(_sock, (sockaddr*)&clientAddr, &nAddrLen);
 			if (INVALID_SOCKET == _cSock)
 			{
@@ -218,22 +221,22 @@ int main()
 				userjoin.sock = (int)g_clients[n];
 				send(g_clients[n], (const char*)&userjoin, sizeof(NewUserJoin), 0);
 			}
-			g_clients.push_back(_cSock);
+			g_clients.push_back(_cSock);//将新加入连接的客户端 加入描述符集合中
 			printf("新客户端加入：socket = %d, IP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
 		}
-		//6 7 接受 处理
+		//6 7 遍历处理位于套接字描述符中的 客户端套接字的请求（收发数据）
 		for (size_t n = 0; n < fdRead.fd_count; n++)
 		{
-			if (-1 == processor(fdRead.fd_array[n]))
+			if (-1 == processor(fdRead.fd_array[n])) //将已经准备好的套接字送入处理程序中处理  并判断当前套接字是否链接正常
 			{
-				auto iter = find(g_clients.begin(), g_clients.end(), fdRead.fd_array[n]);
+				auto iter = find(g_clients.begin(), g_clients.end(), fdRead.fd_array[n]);//如果有连接不正常的套接字   在g_clients中不正常的套接字找到并擦除
 				if (iter != g_clients.end())
 				{
 					g_clients.erase(iter);
 				}
 			}
 		}
-		printf("服务器处于空闲时间，处理其他业务..\n");
+		//printf("服务器处于空闲时间，处理其他业务..\n");
 	}
 
 	//处理关闭套接字
@@ -248,7 +251,10 @@ int main()
 
 	//清除Windows socket环境
 	WSACleanup();
-	printf("客户端已退出，任务结束。");
+	printf("客户端已退出，任务结束.\n");
 	getchar();
 	return 0;
 }
+
+
+
