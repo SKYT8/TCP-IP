@@ -17,12 +17,14 @@
 #include "MessageHeader.hpp"
 class EasyTcpClient
 {
+private:
 	SOCKET _sock;
 public:
 	EasyTcpClient()
 	{
 		_sock = INVALID_SOCKET;
 	}
+	
 	virtual ~EasyTcpClient()
 	{
 		Close();
@@ -81,26 +83,57 @@ public:
 		return ret;
 	}
 
+	// 缓冲区最小单元
+	#ifndef RECV_BUFFF_SIZE
+	#define RECV_BUFF_SIZE 10240 
+	#endif // !RECV_BUFFF_SIZE
+
+	// 接收缓冲区
+	char _szRecv[RECV_BUFF_SIZE] = {};
+	 // 消息缓冲区 第二缓冲区
+	char _szMsgBuf[RECV_BUFF_SIZE * 10] = {};
+	//消息缓冲区尾部指针
+	int _lastPos = 0;
 
 	//接收网络请求 处理粘包 拆分包 问题
-	int RecvData(SOCKET _cSock)
+	int RecvData(SOCKET cSock)
 	{
-		// 缓冲区，管理消息长度
-		char szRecv[4096] = {};
-		// 接受服务端返回数据
-		int nLen = (int)recv(_cSock, szRecv, sizeof(DataHeader), 0);
-		DataHeader* header = (DataHeader*)szRecv;
+		// 接收服务端返回数据
+		int nLen = (int)recv(cSock, _szRecv, sizeof(DataHeader), 0);
 		if (nLen <= 0)
 		{
-			printf("<socket=%d>与服务器断开连接，任务结束.\n",_sock);
+			printf("<socket=%d>与服务器断开连接，任务结束.\n", _sock);
 			return -1;
 		}
-		recv(_cSock, szRecv + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);
-		OnNetMsg(header);
+		//将接收消息缓冲区 接收到的消息 拷贝到 消息缓冲区
+		memcpy(_szMsgBuf + _lastPos, _szRecv, nLen);
+		//消息缓冲区的数据尾部位置
+		_lastPos += nLen;
+		//判断消息缓冲区的数据长度是否大于消息头 获取当前消息体长度
+		while (_lastPos >= sizeof(DataHeader))
+		{
+			DataHeader* header = (DataHeader*)_szMsgBuf;
+			if (_lastPos >= header->dataLength)
+			{
+				//剩余未处理消息长度
+				int nSize = _lastPos - header->dataLength;
+				//处理网络消息
+				OnNetMsg(header);
+				//将消息缓冲区中的未处理数据前移
+				memcpy(_szMsgBuf, _szMsgBuf + header->dataLength, nSize);
+				//位置指针前移 
+				_lastPos = nSize;
+			}
+			else
+			{
+				//消息缓冲区数据未达到一条完整消息，继续从接收缓冲区读取
+				break;
+			}
+		}
 		return 0;
 	}
 
-	// 响应网络请求
+	// 处理网络请求
 	void OnNetMsg(DataHeader* header)
 	{
 		switch (header->cmd)
@@ -123,6 +156,16 @@ public:
 				printf("客户端socket: %d 收到服务端返回消息:CMD_NEW_USER_JOIN,客户端Socket: %d 加入, 数据长度:%d\n", (int)_sock, (int)userjoin->sock, userjoin->dataLength);
 			}
 			break;
+			case CMD_ERROR:
+			{
+				printf("客户端socket: %d 收到服务端返回消息:CMD_ERROR,数据长度:%d\n", (int)_sock, header->dataLength);
+			}
+			break;
+			default:
+			{
+				printf("客户端socket: %d 收到未定义消息，数据长度:%d \n",_sock,header->dataLength);
+			}
+			break;
 		}
 	}
 
@@ -142,7 +185,7 @@ public:
 		return _sock != INVALID_SOCKET;
 	}
 
-	//查询网络状态 select网络模型
+	//查询网络状态 接收服务器消息 select网络模型
 	bool OnRun()
 	{
 		if (isRun())
@@ -189,8 +232,6 @@ public:
 		}
 		_sock = INVALID_SOCKET;
 	}
-
-private:
 
 };
 
