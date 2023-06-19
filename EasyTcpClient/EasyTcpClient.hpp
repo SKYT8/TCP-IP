@@ -71,6 +71,7 @@ public:
 	#else
 		_sin.sin_addr.s_addr = inet_addr(ip);
 	#endif
+		//printf("socket:%d 正在连接服务器：%s:%d...\n", _sock, ip,port);
 		int ret = connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));
 		if (SOCKET_ERROR == ret)
 		{
@@ -78,12 +79,12 @@ public:
 		}
 		else
 		{
-			printf("<socket=%d>连接服务器<%s:%d>成功.\n",_sock,ip, port);
+			//printf("<socket=%d>连接服务器<%s:%d>成功.\n",_sock,ip, port);
 		}
 		return ret;
 	}
 
-	// 缓冲区最小单元
+	// 缓冲区最小单元 
 	#ifndef RECV_BUFFF_SIZE
 	#define RECV_BUFF_SIZE 10240 
 	#endif // !RECV_BUFFF_SIZE
@@ -170,11 +171,11 @@ public:
 	}
 
 	//回送网络数据
-	int SendData(DataHeader* header)
+	int SendData(DataHeader* header, int nLen)
 	{
 		if (isRun() && header)
 		{
-			return send(_sock, (const char*)&header, header->dataLength, 0);
+			return send(_sock, (const char*)&header, nLen, 0);
 		}
 		return SOCKET_ERROR;
 	}
@@ -186,6 +187,7 @@ public:
 	}
 
 	//查询网络状态 接收服务器消息 select网络模型
+	int _nCount = 0;
 	bool OnRun()
 	{
 		if (isRun())
@@ -195,6 +197,7 @@ public:
 			FD_SET(_sock, &fdReads);
 			timeval t = { 0, 0 };
 			int ret = select(_sock + 1, &fdReads, 0, 0, &t);
+			//printf("select ret=%d, count = %d\n",ret,_nCuont++)
 			if (ret < 0)
 			{
 				printf("<socket=%d>select任务结束1..\n", _sock);
