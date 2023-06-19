@@ -22,6 +22,7 @@
     <ClCompile Include="server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CELLTimestamp.hpp" />
     <ClInclude Include="EasyTcpServer.hpp" />
     <ClInclude Include="MessageHeader.hpp" />
   </ItemGroup>
@@ -78,19 +79,19 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)../out/$(Platform)/$(Configuration)</OutDir>
+    <OutDir>$(SolutionDir)../out/$(Platform)/$(Configuration)/$(ProjectName)</OutDir>
     <IntDir>$(SolutionDir)../temp/$(Platform)/$(Configuration)/$(ProjectName)</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)../out/$(Platform)/$(Configuration)</OutDir>
+    <OutDir>$(SolutionDir)../out/$(Platform)/$(Configuration)/$(ProjectName)</OutDir>
     <IntDir>$(SolutionDir)../temp/$(Platform)/$(Configuration)/$(ProjectName)</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)../out/$(Platform)/$(Configuration)</OutDir>
+    <OutDir>$(SolutionDir)../out/$(Platform)/$(Configuration)/$(ProjectName)</OutDir>
     <IntDir>$(SolutionDir)../temp/$(Platform)/$(Configuration)/$(ProjectName)</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)../out/$(Platform)/$(Configuration)</OutDir>
+    <OutDir>$(SolutionDir)../out/$(Platform)/$(Configuration)/$(ProjectName)</OutDir>
     <IntDir>$(SolutionDir)../temp/$(Platform)/$(Configuration)/$(ProjectName)</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
