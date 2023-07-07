@@ -19,10 +19,12 @@ class EasyTcpClient
 {
 private:
 	SOCKET _sock;
+	bool _isConnect;
 public:
 	EasyTcpClient()
 	{
 		_sock = INVALID_SOCKET;
+		_isConnect = false;
 	}
 	
 	virtual ~EasyTcpClient()
@@ -52,7 +54,7 @@ public:
 		}
 		else
 		{
-			printf("TRUE,建立Socket成功.\n");
+			//printf("TRUE,建立Socket成功.\n");
 		}
 	}
 
@@ -79,6 +81,7 @@ public:
 		}
 		else
 		{
+			_isConnect = true;
 			//printf("<socket=%d>连接服务器<%s:%d>成功.\n",_sock,ip, port);
 		}
 		return ret;
@@ -86,13 +89,13 @@ public:
 
 	// 缓冲区最小单元 
 	#ifndef RECV_BUFFF_SIZE
-	#define RECV_BUFF_SIZE 10240 
+	#define RECV_BUFF_SIZE 10240 * 5
 	#endif // !RECV_BUFFF_SIZE
 
-	// 接收缓冲区
-	char _szRecv[RECV_BUFF_SIZE] = {};
+	// 接收缓冲区  
+	//char _szRecv[RECV_BUFF_SIZE] = {};
 	 // 消息缓冲区 第二缓冲区
-	char _szMsgBuf[RECV_BUFF_SIZE * 10] = {};
+	char _szMsgBuf[RECV_BUFF_SIZE * 5] = {};
 	//消息缓冲区尾部指针
 	int _lastPos = 0;
 
@@ -100,20 +103,22 @@ public:
 	int RecvData(SOCKET cSock)
 	{
 		// 接收服务端返回数据
-		int nLen = (int)recv(cSock, _szRecv, sizeof(DataHeader), 0);
+		char* szRecv = _szMsgBuf + _lastPos;//将数据直接拷贝到消息缓冲区  不先拷贝到接收缓冲区  减少一个拷贝时间
+		int nLen = (int)recv(cSock, szRecv, (RECV_BUFF_SIZE * 5) - _lastPos, 0);
 		if (nLen <= 0)
 		{
 			printf("<socket=%d>与服务器断开连接，任务结束.\n", _sock);
 			return -1;
 		}
 		//将接收消息缓冲区 接收到的消息 拷贝到 消息缓冲区
-		memcpy(_szMsgBuf + _lastPos, _szRecv, nLen);
+		//memcpy(_szMsgBuf + _lastPos, _szRecv, nLen);
 		//消息缓冲区的数据尾部位置
 		_lastPos += nLen;
 		//判断消息缓冲区的数据长度是否大于消息头 获取当前消息体长度
 		while (_lastPos >= sizeof(DataHeader))
 		{
 			DataHeader* header = (DataHeader*)_szMsgBuf;
+			int a = sizeof(header);
 			if (_lastPos >= header->dataLength)
 			{
 				//剩余未处理消息长度
@@ -142,19 +147,19 @@ public:
 			case CMD_LOGIN_RESULT:
 			{
 				LoginResult* loginResult = (LoginResult*)header;
-				printf("<socket=%d>收到服务端返回消息:CMD_LOGINRESULT, 数据长度:%d\n", _sock, loginResult->dataLength);
+				//printf("<socket=%d>收到服务端返回消息:CMD_LOGINRESULT, 数据长度:%d\n", _sock, loginResult->dataLength);
 			}
 			break;
 			case CMD_LOGOUT_RESULT:
 			{
 				LogoutResult* logoutResult = (LogoutResult*)header;
-				printf("客户端socket: %d 收到服务端返回消息:CMD_LOGOUTRESULT, 数据长度:%d\n", _sock, logoutResult->dataLength);
+				//printf("客户端socket: %d 收到服务端返回消息:CMD_LOGOUTRESULT, 数据长度:%d\n", _sock, logoutResult->dataLength);
 			}
 			break;
 			case CMD_NEW_USER_JOIN:
 			{
 				NewUserJoin* userjoin = (NewUserJoin*)header;
-				printf("客户端socket: %d 收到服务端返回消息:CMD_NEW_USER_JOIN,客户端Socket: %d 加入, 数据长度:%d\n", (int)_sock, (int)userjoin->sock, userjoin->dataLength);
+				//printf("客户端socket: %d 收到服务端返回消息:CMD_NEW_USER_JOIN,客户端Socket: %d 加入, 数据长度:%d\n", (int)_sock, (int)userjoin->sock, userjoin->dataLength);
 			}
 			break;
 			case CMD_ERROR:
@@ -166,24 +171,28 @@ public:
 			{
 				printf("客户端socket: %d 收到未定义消息，数据长度:%d \n",_sock,header->dataLength);
 			}
-			break;
 		}
 	}
 
 	//回送网络数据
 	int SendData(DataHeader* header, int nLen)
 	{
+		int ret = SOCKET_ERROR;
 		if (isRun() && header)
 		{
-			return send(_sock, (const char*)&header, nLen, 0);
+			ret = send(_sock, (const char*)&header, nLen, 0);
+			if (ret == SOCKET_ERROR)
+			{
+				Close();
+			}
 		}
-		return SOCKET_ERROR;
+		return ret;
 	}
 
 	//判断是否工作中
 	bool isRun()
 	{
-		return _sock != INVALID_SOCKET;
+		return _sock != INVALID_SOCKET && _isConnect;
 	}
 
 	//查询网络状态 接收服务器消息 select网络模型
@@ -234,6 +243,7 @@ public:
 	#endif
 		}
 		_sock = INVALID_SOCKET;
+		_isConnect = false;
 	}
 
 };

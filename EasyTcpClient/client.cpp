@@ -1,6 +1,7 @@
 #include "EasyTcpClient.hpp"
+#include "CELLTimestamp.hpp"
 #include<thread>
-
+#include<atomic>
 bool g_bRun = true;
 //线程处理函数
 void cmdThread()
@@ -24,13 +25,17 @@ void cmdThread()
 }
 
 //客户端数量
-const int cCount = 10000;
+const int cCount = 100;
 //发送线程数量
 const int tCount = 4;
 //客户端数组
 EasyTcpClient* client[cCount];
+std::atomic_int sendCount =0;
+std::atomic_int readyCount = 0;
+
 void sendThread(int id)
 { 
+	printf("thread:%d,start... \n", id);
 	//4个线程 1 - 4
 	int c = cCount / tCount;
 	int begin = (id - 1) * c; 
@@ -42,18 +47,22 @@ void sendThread(int id)
 	for (int n = begin; n < end; n++)
 	{
 		client[n]->Connect("127.0.0.1", 4567);
-		printf("线程:%d,Connect= %d..\n", id,n);
 	}
+	printf("Thread:%d,Connect begin: %d,end: %d ..\n", id, begin,end);
 
-	std::chrono::milliseconds t(5000);
-	std::this_thread::sleep_for(t);
+	readyCount++;
+	while (readyCount < tCount)
+	{//等待其他綫程准备好发送数据
+		std::chrono::milliseconds t(10);
+		std::this_thread::sleep_for(t);
+	}
 
 	//一次发一个数据
 	//Login login;
 	//strcpy(login.userName, "JHY");
 	//strcpy(login.PassWord, "666");
 	//一次发送十个数据, 同时需要修改SendData方法
-	Login login[10];
+	Login login[1];
 	for (int n = 0; n < 10; n++)
 	{
 		strcpy(login[n].userName, "JHY");
@@ -65,17 +74,21 @@ void sendThread(int id)
 	{ 
 		for (int n = begin; n <  end; n++)
 		{
-			//client[n]->OnRun();
-			client[n]->SendData(login,nLen);
+			if (SOCKET_ERROR != client[n]->SendData(login, nLen))
+			{
+				sendCount++;
+			}
+			client[n]->OnRun();
 		}
 	}
 
-	//关闭连接
+	//关闭连接 
 	for (int n = begin; n < end; n++)
 	{
-		delete client[n];
 		client[n]->Close();
+		delete client[n];
 	}
+	printf("thread:%d,exit...\n", id);
 }
 
 int main() 
@@ -90,9 +103,18 @@ int main()
 	std::thread t1(cmdThread);
 	t1.detach();
 
+	CELLTimestamp tTime;
+
 	while (g_bRun)
 	{
-		Sleep(100);
+		auto t = tTime.getElapsedSecond();
+		if (t >= 1.0)
+		{
+			printf("thread:%d,clientCount:%d,time:%lf,sendCount:%d...\n",tCount, cCount, t,  (int)(sendCount/t));
+			tTime.update();
+			sendCount = 0;
+		}
+		Sleep(1);
 	}
 	printf("已退出..\n");
 	//getchar();//防止程序一闪而过
