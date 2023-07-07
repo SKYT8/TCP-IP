@@ -1,4 +1,4 @@
-﻿#ifndef _CELLTimestamp_hpp_
+#ifndef _CELLTimestamp_hpp_
 #define _CELLTimestamp_hpp_
 
 //#include <windows.h>
