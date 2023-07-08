@@ -1,0 +1,26 @@
+﻿  server.cpp
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\server.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\CELLTask.hpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\CELLServer.hpp(139,30): warning C4244: “参数”: 从“SOCKET”转换到“int”，可能丢失数据
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\CELLServer.hpp(152,22): warning C4018: “<”: 有符号/无符号不匹配
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(111,11): warning C4477: “printf”: 格式字符串“%d”需要类型“int”的参数，但可变参数 1 拥有了类型“SOCKET”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(111,11): message : 请考虑在格式字符串中使用“%lld”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(111,11): message : 请考虑在格式字符串中使用“%Id”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(111,11): message : 请考虑在格式字符串中使用“%I64d”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(114,11): warning C4477: “printf”: 格式字符串“%d”需要类型“int”的参数，但可变参数 1 拥有了类型“SOCKET”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(114,11): message : 请考虑在格式字符串中使用“%lld”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(114,11): message : 请考虑在格式字符串中使用“%Id”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(114,11): message : 请考虑在格式字符串中使用“%I64d”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(203,27): warning C4244: “参数”: 从“SOCKET”转换到“int”，可能丢失数据
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(233,11): warning C4477: “printf”: 格式字符串“%d”需要类型“int”的参数，但可变参数 3 拥有了类型“SOCKET”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(233,11): message : 请考虑在格式字符串中使用“%lld”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(233,11): message : 请考虑在格式字符串中使用“%Id”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\EasyTcpServer.hpp(233,11): message : 请考虑在格式字符串中使用“%I64d”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\server.cpp(69,11): warning C4477: “printf”: 格式字符串“%d”需要类型“int”的参数，但可变参数 1 拥有了类型“SOCKET”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\server.cpp(69,11): message : 请考虑在格式字符串中使用“%lld”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\server.cpp(69,11): message : 请考虑在格式字符串中使用“%Id”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\server.cpp(69,11): message : 请考虑在格式字符串中使用“%I64d”
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\server.cpp(69,107): warning C4474: printf: 格式字符串中传递的参数太多
+D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\server.cpp(69,107): message : 占位符和其参数预计 1 可变参数，但提供的却是 2 参数
+  EasyTcpServer.vcxproj -> D:\Maker\Proj\VS2022\Hello-Socket\HelloSocket-2.0\EasyTcpServer\x64\Debug\EasyTcpServer.exe
