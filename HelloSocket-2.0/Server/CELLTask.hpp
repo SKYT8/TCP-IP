@@ -4,61 +4,41 @@
 #include<thread>
 #include<mutex>
 #include<list>
+
 #include<functional>
-//ä»»åŠ¡ç±»å‹-åŸºç±»
-class CellTask
-{
-public:
-	CellTask()
-	{
 
-	}
-
-	//è™šææ„
-	virtual ~CellTask()
-	{
-
-	}
-	//æ‰§è¡Œä»»åŠ¡
-	virtual void doTask()
-	{
-
-	}
-private:
-
-};
-
-//æ‰§è¡Œä»»åŠ¡çš„æœåŠ¡ç±»å‹
+//Ö´ĞĞÈÎÎñµÄ·şÎñÀàĞÍ
 class CellTaskServer 
 {
+	typedef std::function<void()> CellTask;
 private:
-	//ä»»åŠ¡æ•°æ®
-	std::list<CellTask*> _tasks;
-	//ä»»åŠ¡æ•°æ®ç¼“å†²åŒº
-	std::list<CellTask*> _tasksBuf;
-	//æ”¹å˜æ•°æ®ç¼“å†²åŒºæ—¶éœ€è¦åŠ é”
+	//ÈÎÎñÊı¾İ
+	std::list<CellTask> _tasks;
+	//ÈÎÎñÊı¾İ»º³åÇø
+	std::list<CellTask> _tasksBuf;
+	//¸Ä±äÊı¾İ»º³åÇøÊ±ĞèÒª¼ÓËø
 	std::mutex _mutex;
 public:
-	//æ·»åŠ ä»»åŠ¡
-	void addTask(CellTask* task)
+	//Ìí¼ÓÈÎÎñ
+	void addTask(CellTask task)
 	{
 		std::lock_guard<std::mutex> lock(_mutex);
 		_tasksBuf.push_back(task);
 	}
-	//å¯åŠ¨å·¥ä½œçº¿ç¨‹
+	//Æô¶¯¹¤×÷Ïß³Ì
 	void Start()
 	{
-		//çº¿ç¨‹
+		//Ïß³Ì
 		std::thread t(std::mem_fn(&CellTaskServer::OnRun),this);
 		t.detach();
 	}
 protected:
-	//å·¥ä½œå‡½æ•°
+	//¹¤×÷º¯Êı
 	void OnRun()
 	{
 		while (true)
 		{
-			//ä»ç¼“å†²åŒºå–å‡ºæ•°æ®
+			//´Ó»º³åÇøÈ¡³öÊı¾İ
 			if (!_tasksBuf.empty())
 			{
 				std::lock_guard<std::mutex> lock(_mutex);
@@ -68,20 +48,19 @@ protected:
 				}
 				_tasksBuf.clear();
 			}
-			//å¦‚æœæ²¡æœ‰ä»»åŠ¡
+			//Èç¹ûÃ»ÓĞÈÎÎñ
 			if (_tasks.empty())
 			{
 				std::chrono::milliseconds t(1);
 				std::this_thread::sleep_for(t);
 				continue;
 			}
-			//å¤„ç†ä»»åŠ¡
+			//´¦ÀíÈÎÎñ
 			for (auto pTask : _tasks)
 			{
-				pTask->doTask();
-				delete pTask;
+				pTask();
 			}
-			//æ¸…ç©ºä»»åŠ¡
+			//Çå¿ÕÈÎÎñ
 			_tasks.clear();
 		}
 
